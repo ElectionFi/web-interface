@@ -103,7 +103,7 @@ const Token = props => {
       const fmtReward = ethers.utils.formatUnits(reward)
       // console.log(fmtReward)
       if (fmtReward != '0.0') {
-        setAPY(fmtReward * 1000)
+        setAPY(fmtReward * 100)
       }
 
       const userRewards = await yearn.earned(address)
