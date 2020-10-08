@@ -99,11 +99,14 @@ const Token = props => {
       const fmtBalance = ethers.utils.formatUnits(balance)
       setAmountStaked(fmtBalance)
 
-      const reward = await yearn.rewardPerToken()
-      const fmtReward = ethers.utils.formatUnits(reward)
+      const rewardRate = await yearn.rewardRate()
+      const fmtRewardRate = ethers.utils.formatUnits(rewardRate)
+
+      const rewardPerToken = await yearn.rewardPerTokenStored()
+      const fmtRewardPerToken = ethers.utils.formatUnits(rewardPerToken)
       // console.log(fmtReward)
-      if (fmtReward != '0.0') {
-        setAPY(fmtReward * 100)
+      if (fmtRewardRate != '0.0') {
+        setAPY(fmtRewardRate * fmtRewardPerToken * 5 * 60 * 24)
       }
 
       const userRewards = await yearn.earned(address)
@@ -111,6 +114,19 @@ const Token = props => {
       setclaimableRewards(fmtUserRewards)
     } catch {
       //this errs periodically
+    }
+  }
+
+  const getReward = async () => {
+    try {
+      const yearn = new Contract(
+        props.pool.yearn,
+        abis.yearn,
+        props.provider.getSigner(),
+      )
+      await yearn.getReward()
+    } catch {
+      console.log('hmm.. something strange happened.')
     }
   }
 
@@ -189,7 +205,9 @@ const Token = props => {
               </p>
               <p>
                 <b>{`Wallet ${props.pool.name}:`}</b>
-                {lpAmount > 0 ? `${parseFloat(lpAmount).toFixed(3)}` : `0.00 `}
+                {lpAmount > 0
+                  ? `${Math.round(Math.floor(lpAmount * 10000)) / 10000}`
+                  : `0.00 `}
               </p>
               <p>
                 <b>Total Staked:</b> {`${amountStaked}`}
@@ -219,6 +237,11 @@ const Token = props => {
             <MDBRow>
               <MDBCol>
                 <Button onClick={() => stake()}>Stake</Button>
+              </MDBCol>
+            </MDBRow>
+            <MDBRow>
+              <MDBCol>
+                <Button onClick={() => getReward()}>Claim</Button>
               </MDBCol>
             </MDBRow>
             <MDBRow>
